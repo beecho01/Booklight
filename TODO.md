@@ -6,3 +6,4 @@
 - [ ] Show Listen progress in Book Cards
 - [x] Get Brand colour to match system accent
 - [x] Store volume setting over application restarts
+- [x] Add README based on [Best-README-Template](https://raw.githubusercontent.com/othneildrew/Best-README-Template/refs/heads/main/BLANK_README.md)
