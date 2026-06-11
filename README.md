@@ -15,12 +15,12 @@
   <p align="center">
     A native Windows desktop client for <a href="https://github.com/advplyr/audiobookshelf">Audiobookshelf</a>, built with Tauri v2, React 18, TypeScript, and Fluent UI.
     <br />
-    <a href="https://github.com/jamesbeeching/Booklight"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/beecho01/Booklight"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/jamesbeeching/Booklight/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/beecho01/Booklight/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
-    <a href="https://github.com/jamesbeeching/Booklight/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/beecho01/Booklight/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
@@ -92,7 +92,7 @@ To get a local copy up and running, follow these steps.
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/jamesbeeching/Booklight.git
+   git clone https://github.com/beecho01/Booklight.git
    cd Booklight
    ```
 2. Install frontend dependencies
@@ -142,7 +142,7 @@ To get a local copy up and running, follow these steps.
 - [ ] Bookmarks management
 - [ ] Search functionality
 
-See the [open issues](https://github.com/jamesbeeching/Booklight/issues) for a full list of proposed features and known issues.
+See the [open issues](https://github.com/beecho01/Booklight/issues) for a full list of proposed features and known issues.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -179,16 +179,16 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/jamesbeeching/Booklight.svg?style=for-the-badge
-[contributors-url]: https://github.com/jamesbeeching/Booklight/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/jamesbeeching/Booklight.svg?style=for-the-badge
-[forks-url]: https://github.com/jamesbeeching/Booklight/network/members
-[stars-shield]: https://img.shields.io/github/stars/jamesbeeching/Booklight.svg?style=for-the-badge
-[stars-url]: https://github.com/jamesbeeching/Booklight/stargazers
-[issues-shield]: https://img.shields.io/github/issues/jamesbeeching/Booklight.svg?style=for-the-badge
-[issues-url]: https://github.com/jamesbeeching/Booklight/issues
-[license-shield]: https://img.shields.io/github/license/jamesbeeching/Booklight.svg?style=for-the-badge
-[license-url]: https://github.com/jamesbeeching/Booklight/blob/main/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/beecho01/Booklight.svg?style=for-the-badge
+[contributors-url]: https://github.com/beecho01/Booklight/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/beecho01/Booklight.svg?style=for-the-badge
+[forks-url]: https://github.com/beecho01/Booklight/network/members
+[stars-shield]: https://img.shields.io/github/stars/beecho01/Booklight.svg?style=for-the-badge
+[stars-url]: https://github.com/beecho01/Booklight/stargazers
+[issues-shield]: https://img.shields.io/github/issues/beecho01/Booklight.svg?style=for-the-badge
+[issues-url]: https://github.com/beecho01/Booklight/issues
+[license-shield]: https://img.shields.io/github/license/beecho01/Booklight.svg?style=for-the-badge
+[license-url]: https://github.com/beecho01/Booklight/blob/main/LICENSE
 
 [Tauri-badge]: https://img.shields.io/badge/Tauri-v2-24C8D8?style=for-the-badge&logo=tauri&logoColor=white
 [Tauri-url]: https://tauri.app/
