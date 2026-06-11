@@ -1,0 +1,8 @@
+- [ ] Sync Listening Progress
+- [x] Make Library Filter Function
+- [ ] Remove Export? (maybe)
+- [x] Clicking in Now Playing bar (not a button) shows Now Playing Screen
+- [x] Remove Dark Mode Toggle as it doubles up function with buttons
+- [ ] Show Listen progress in Book Cards
+- [x] Get Brand colour to match system accent
+- [x] Store volume setting over application restarts

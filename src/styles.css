@@ -1,0 +1,79 @@
+html,
+body,
+#container,
+#root {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family:
+        'Segoe UI',
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+    background: transparent !important;
+}
+
+/* FluentProvider applies its own opaque background — override for Mica */
+.fui-FluentProvider {
+    background: transparent !important;
+}
+
+/* Surface overrides: colorNeutralBackground1 is transparent for Mica, but popup surfaces need opaque/semi-opaque backgrounds */
+
+/* Dialog surfaces */
+.fui-DialogSurface {
+    background-color: var(--colorNeutralBackground2) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+}
+*/
+
+/* Popover surfaces (volume popover, etc.) */
+.fui-PopoverSurface {
+    background-color: var(--colorNeutralBackground2) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Dropdown / Select listbox surfaces */
+.fui-Listbox {
+    background-color: var(--colorNeutralBackground2) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Menu popover surfaces */
+.fui-MenuPopover {
+    background-color: var(--colorNeutralBackground2) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Tooltip content */
+.fui-Tooltip__content {
+    background-color: var(--colorNeutralBackground2) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Card surfaces (book cards, etc.) */
+.fui-Card {
+    background-color: var(--colorNeutralBackground2) !important;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
