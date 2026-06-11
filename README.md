@@ -52,18 +52,18 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Booklight is a native Windows desktop client for [Audiobookshelf](https://github.com/advplyr/audiobookshelf) — a self-hosted audiobook and podcast server. It provides a polished, Windows 11-native experience with Mica transparency effects, Fluent UI components, and seamless audio playback.
+Booklight is a native Windows desktop client for [Audiobookshelf](https://github.com/advplyr/audiobookshelf) - a self-hosted audiobook and podcast server. It provides a polished, Windows 11-native experience with Mica transparency effects, Fluent UI components, and seamless audio playback.
 
 ### Key Features
 
-- 🎧 **Audio Playback** — HTML5 Audio with session sync, progress tracking, and chapter navigation
-- 📚 **Library Browser** — Grid view with cover art, progress badges, and zoom controls
-- 🔍 **Filter & Search** — Filter by genre, author, or narrator; search across your library
-- 🎨 **Windows 11 Design** — Mica effect, Fluent UI components, system accent color matching
-- 🌓 **Theme Support** — Light, Dark, and System themes with automatic accent color detection
-- ⏯️ **Now Playing Bar** — Frosted glass playback bar with chapter selector, volume, and speed controls
-- 📖 **Audiobook Details** — Rich detail modal with cover art, metadata, chapters, and description
-- 💾 **Persistent Settings** — Volume and playback speed saved across restarts
+- 🎧 **Audio Playback** - HTML5 Audio with session sync, progress tracking, and chapter navigation
+- 📚 **Library Browser** - Grid view with cover art, progress badges, and zoom controls
+- 🔍 **Filter & Search** - Filter by genre, author, or narrator; search across your library
+- 🎨 **Windows 11 Design** - Mica effect, Fluent UI components, system accent color matching
+- 🌓 **Theme Support** - Light, Dark, and System themes with automatic accent color detection
+- ⏯️ **Now Playing Bar** - Frosted glass playback bar with chapter selector, volume, and speed controls
+- 📖 **Audiobook Details** - Rich detail modal with cover art, metadata, chapters, and description
+- 💾 **Persistent Settings** - Volume and playback speed saved across restarts
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -86,7 +86,7 @@ To get a local copy up and running, follow these steps.
 
 - [Node.js](https://nodejs.org/) (v18+)
 - [Rust](https://www.rust-lang.org/tools/install) (stable)
-- [Tauri v2 Prerequisites](https://v2.tauri.app/start/prerequisites/) — WebView2, Visual Studio C++ Build Tools (Windows)
+- [Tauri v2 Prerequisites](https://v2.tauri.app/start/prerequisites/) - WebView2, Visual Studio C++ Build Tools (Windows)
 
 ### Installation
 
@@ -113,13 +113,13 @@ To get a local copy up and running, follow these steps.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-1. **Connect to your server** — Open Settings and enter your Audiobookshelf server URL
-2. **Authenticate** — Log in with your username/password or an API token
-3. **Browse your library** — View your audiobooks in a responsive grid with cover art
-4. **Start listening** — Click the play button on any book card to begin playback
-5. **Control playback** — Use the Now Playing bar for play/pause, skip, volume, and chapter navigation
-6. **Filter your library** — Use the filter menu to narrow by genre, author, or narrator
-7. **View details** — Click any book card to see full metadata, chapters, and description
+1. **Connect to your server** - Open Settings and enter your Audiobookshelf server URL
+2. **Authenticate** - Log in with your username/password or an API token
+3. **Browse your library** - View your audiobooks in a responsive grid with cover art
+4. **Start listening** - Click the play button on any book card to begin playback
+5. **Control playback** - Use the Now Playing bar for play/pause, skip, volume, and chapter navigation
+6. **Filter your library** - Use the filter menu to narrow by genre, author, or narrator
+7. **View details** - Click any book card to see full metadata, chapters, and description
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -171,10 +171,10 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-- [Audiobookshelf](https://github.com/advplyr/audiobookshelf) — The excellent self-hosted audiobook server
-- [Tauri](https://tauri.app/) — Build smaller, faster, and more secure desktop applications
-- [Fluent UI React v9](https://react.fluentui.dev/) — Microsoft's design system for React
-- [Best-README-Template](https://github.com/othneildrew/Best-README-Template) — README template inspiration
+- [Audiobookshelf](https://github.com/advplyr/audiobookshelf) - The excellent self-hosted audiobook server
+- [Tauri](https://tauri.app/) - Build smaller, faster, and more secure desktop applications
+- [Fluent UI React v9](https://react.fluentui.dev/) - Microsoft's design system for React
+- [Best-README-Template](https://github.com/othneildrew/Best-README-Template) - README template inspiration
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
