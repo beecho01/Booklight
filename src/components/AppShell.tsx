@@ -14,18 +14,34 @@ const useStyles = makeStyles({
         gridTemplateRows: 'auto 1fr',
         height: '100vh',
         ...shorthands.overflow('hidden'),
-        // Semi-transparent background so Mica shows through
-        backgroundColor: tokens.colorNeutralBackground1,
+        // Transparent so Mica shows through
+        backgroundColor: 'transparent',
+        position: 'relative',
     },
     titlebar: {
         gridColumn: '1 / 3',
     },
     main: {
         overflowY: 'auto' as const,
-        ...shorthands.padding(tokens.spacingHorizontalXXL),
+        overflowX: 'hidden',
+        padding: tokens.spacingHorizontalXXL,
         // Bottom padding is added dynamically when now-playing bar is visible
         // Semi-transparent so Mica material is visible
-        backgroundColor: tokens.colorNeutralBackground1,
+        backgroundColor: tokens.colorNeutralBackground2,
+        borderTopLeftRadius: '8px',
+    },
+    // Corner patch: fills the gap created by main's borderTopLeftRadius
+    // with the sidebar/titlebar background color, creating the Windows 11 layered look
+    // Uses radial-gradient for a concave (inward-curving) corner that matches main's rounded top-left
+    cornerPatch: {
+        position: 'absolute',
+        width: '8px',
+        height: '8px',
+        // radial-gradient creates a circular cutout in the bottom-right corner
+        // transparent at the curve, sidebar color everywhere else
+        background: `radial-gradient(circle at 100% 100%, transparent ${tokens.borderRadiusLarge}, transparent ${tokens.borderRadiusLarge})`,
+        zIndex: 1,
+        transition: 'left 0.2s ease',
     },
     nowPlayingOverlay: {
         position: 'fixed',
@@ -65,6 +81,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 onSearchSelect={handleSearchSelect}
                 collapsed={sidebarCollapsed}
                 onCollapsedChange={setSidebarCollapsed}
+            />
+            <div
+                className={styles.cornerPatch}
+                style={{
+                    top: '48px',
+                    left: sidebarCollapsed ? '56px' : '240px',
+                }}
             />
             <div
                 className={styles.main}

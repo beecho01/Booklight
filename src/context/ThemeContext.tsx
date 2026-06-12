@@ -1,7 +1,81 @@
-import type { Theme } from '@fluentui/react-components'
+import { Theme, webDarkTheme, webLightTheme } from '@fluentui/react-components'
 import { invoke } from '@tauri-apps/api/core'
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { booklightDarkTheme, booklightTheme } from './PlaybackContext'
+
+// Booklight theme overrides — WinUI 3-style Mica layering
+// In WinUI 3, elevated surfaces (cards, sidebars) are LIGHTER than the base in dark mode
+// and slightly darker in light mode. This matches the CardBackgroundFillColorDefault pattern.
+export const booklightTheme: Theme = {
+    ...webLightTheme,
+    colorBrandForeground1: '#0E7A6E',
+    colorBrandForeground2: '#0F9B8C',
+    colorBrandBackground: '#0E7A6E',
+    colorBrandStroke1: '#0E7A6E',
+    colorPaletteGreenBackground1: '#0E7A6E',
+    colorPaletteGreenForeground1: '#0E7A6E',
+    // Mica-compatible semi-transparent backgrounds
+    colorNeutralBackground1: 'transparent',
+    colorNeutralBackground2: 'rgba(245, 245, 245, 0.70)', // Sidebar
+    colorNeutralBackground3: 'rgba(235, 235, 235, 0.70)', // Toolbar
+    colorNeutralBackgroundAlpha: 'rgba(255, 255, 255, 0.72)', // Frosted glass (now-playing bar)
+    colorNeutralCardBackground: 'rgba(255, 255, 255, 0.70)', // Cards — matching WinUI 3 CardBackgroundFillColorDefault
+    colorNeutralCardBackgroundHover: 'rgba(255, 255, 255, 0.80)',
+    colorNeutralCardBackgroundPressed: 'rgba(255, 255, 255, 0.50)',
+    colorNeutralCardBackgroundSelected: 'rgba(245, 245, 245, 0.70)',
+}
+
+export const booklightDarkTheme: Theme = {
+    ...webDarkTheme,
+    colorBrandForeground1: '#4FD1C5',
+    colorBrandForeground2: '#6EE7D8',
+    colorBrandBackground: '#0E7A6E',
+    colorBrandStroke1: '#4FD1C5',
+    // ── WinUI 3-style Mica layering ──────────────────────────────────────────
+    // In WinUI 3 dark mode, elevated surfaces are LIGHTER than the base.
+    // The base layer (window background) is transparent to show Mica through.
+    // Cards, sidebars, and interactive elements use semi-transparent white overlays
+    // matching the CardBackgroundFillColorDefault / SubtleFillColor* pattern.
+    //
+    // Background hierarchy (lighter = more elevated):
+    //   Background5 > Background4 > Background3 > Background2 > Background1 (transparent)
+    //   CardBackground is the lightest (most elevated surface)
+    //
+    // Neutral backgrounds — Mica-compatible semi-transparent white overlays
+    colorNeutralBackground1: 'transparent',
+    colorNeutralBackground1Hover: 'rgba(255, 255, 255, 0.06)',
+    colorNeutralBackground1Pressed: 'rgba(255, 255, 255, 0.03)',
+    colorNeutralBackground1Selected: 'rgba(255, 255, 255, 0.05)',
+    colorNeutralBackground2: 'rgba(255, 255, 255, 0.035)', // Sidebar
+    colorNeutralBackground2Hover: 'rgba(255, 255, 255, 0.065)',
+    colorNeutralBackground2Pressed: 'rgba(255, 255, 255, 0.04)',
+    colorNeutralBackground2Selected: 'rgba(255, 255, 255, 0.055)',
+    colorNeutralBackground3: 'rgba(255, 255, 255, 0.059)', // Toolbar, search results
+    colorNeutralBackground3Hover: 'rgba(255, 255, 255, 0.08)',
+    colorNeutralBackground3Pressed: 'rgba(255, 255, 255, 0.045)',
+    colorNeutralBackground3Selected: 'rgba(255, 255, 255, 0.065)',
+    colorNeutralBackground4: 'rgba(255, 255, 255, 0.018)', // Nav item, chapter hover
+    colorNeutralBackground4Hover: 'rgba(255, 255, 255, 0.05)',
+    colorNeutralBackground4Pressed: 'rgba(255, 255, 255, 0.03)',
+    colorNeutralBackground4Selected: 'rgba(255, 255, 255, 0.04)',
+    colorNeutralBackground5: 'rgba(255, 255, 255, 0.012)', // Deepest layer
+    colorNeutralBackground6: 'rgba(255, 255, 255, 0.008)', // Deepest layer (rarely used)
+    colorNeutralBackgroundAlpha: 'rgba(255, 255, 255, 0.70)', // Frosted glass (now-playing bar)
+    // Card backgrounds — most elevated surface, lightest tinge
+    colorNeutralCardBackground: 'rgba(255, 255, 255, 0.070)',
+    colorNeutralCardBackgroundHover: 'rgba(255, 255, 255, 0.082)',
+    colorNeutralCardBackgroundPressed: 'rgba(255, 255, 255, 0.047)',
+    colorNeutralCardBackgroundSelected: 'rgba(255, 255, 255, 0.059)',
+    // Subtle backgrounds — Nav items, buttons, interactive elements
+    // WinUI 3 SubtleFillColor* pattern: semi-transparent white overlays
+    colorSubtleBackground: 'transparent',
+    colorSubtleBackgroundHover: 'rgba(255, 255, 255, 0.06)', // SubtleFillColorSecondary
+    colorSubtleBackgroundPressed: 'rgba(255, 255, 255, 0.04)', // SubtleFillColorTertiary
+    colorSubtleBackgroundSelected: 'rgba(255, 255, 255, 0.05)', // SubtleFillColorTertiary
+    // Subtle backgrounds with alpha (for hover on transparent surfaces)
+    colorSubtleBackgroundLightAlphaHover: 'rgba(255, 255, 255, 0.04)',
+    colorSubtleBackgroundLightAlphaPressed: 'rgba(255, 255, 255, 0.02)',
+    colorSubtleBackgroundLightAlphaSelected: 'rgba(255, 255, 255, 0.03)',
+}
 
 type ThemeMode = 'light' | 'dark' | 'system'
 

@@ -3,6 +3,7 @@ mod models;
 
 use api::*;
 use models::*;
+use tauri::Manager;
 
 #[tauri::command]
 fn get_system_accent_color() -> Result<String, String> {
@@ -483,7 +484,21 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_http::init())
-        .setup(|_app| Ok(()))
+        .setup(|app| {
+            // Set the window icon for the taskbar
+            if let Some(main_window) = app.get_webview_window("main") {
+                let icon_bytes = include_bytes!("../icons/icon.png");
+                let decoder = png::Decoder::new(std::io::Cursor::new(icon_bytes));
+                let mut reader = decoder.read_info().expect("Failed to read PNG info");
+                let mut buf = vec![0u8; reader.output_buffer_size()];
+                let info = reader
+                    .next_frame(&mut buf)
+                    .expect("Failed to read PNG frame");
+                let icon = tauri::image::Image::new_owned(buf, info.width, info.height);
+                let _ = main_window.set_icon(icon);
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_system_accent_color,
             login,

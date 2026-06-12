@@ -1,4 +1,3 @@
-import { Theme, webDarkTheme, webLightTheme } from '@fluentui/react-components'
 import React, {
     createContext,
     useCallback,
@@ -11,35 +10,6 @@ import React, {
 import * as itemsApi from '../api/items'
 import * as sessionsApi from '../api/sessions'
 import type { Chapter, LibraryItemExpanded, MediaProgress } from '../types'
-
-// Booklight theme overrides
-export const booklightTheme: Theme = {
-    ...webLightTheme,
-    colorBrandForeground1: '#0E7A6E',
-    colorBrandForeground2: '#0F9B8C',
-    colorBrandBackground: '#0E7A6E',
-    colorBrandStroke1: '#0E7A6E',
-    colorPaletteGreenBackground1: '#0E7A6E',
-    colorPaletteGreenForeground1: '#0E7A6E',
-    // Mica-compatible semi-transparent backgrounds
-    colorNeutralBackground1: 'transparent',
-    colorNeutralBackground2: 'rgba(245, 245, 245, 0.65)',
-    colorNeutralBackground3: 'rgba(235, 235, 235, 0.70)',
-    colorNeutralBackgroundAlpha: 'rgba(255, 255, 255, 0.72)',
-}
-
-export const booklightDarkTheme: Theme = {
-    ...webDarkTheme,
-    colorBrandForeground1: '#4FD1C5',
-    colorBrandForeground2: '#6EE7D8',
-    colorBrandBackground: '#0E7A6E',
-    colorBrandStroke1: '#4FD1C5',
-    // Mica-compatible semi-transparent dark backgrounds
-    colorNeutralBackground1: 'transparent',
-    colorNeutralBackground2: 'rgba(37, 37, 37, 0.65)',
-    colorNeutralBackground3: 'rgba(45, 45, 45, 0.70)',
-    colorNeutralBackgroundAlpha: 'rgba(30, 30, 30, 0.72)',
-}
 
 interface PlaybackState {
     currentItem: LibraryItemExpanded | null

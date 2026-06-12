@@ -1,11 +1,8 @@
-import { Button, Input, makeStyles, Text, tokens } from '@fluentui/react-components'
+import { Button, Input, makeStyles, Nav, NavItem, Text, tokens } from '@fluentui/react-components'
 import {
     Dismiss20Regular,
-    Folder20Filled,
     Folder20Regular,
-    Library20Filled,
     Library20Regular,
-    MusicNote220Filled,
     MusicNote220Regular,
     Navigation20Regular,
     Open20Regular,
@@ -15,13 +12,13 @@ import {
 import { useCallback, useState } from 'react'
 import searchApi from '../api/search'
 import { useAuth } from '../context/AuthContext'
-import { borderRadiusSmall, sidebarShadow } from '../theme'
+import { sidebarShadow } from '../theme'
 import type { SearchResult } from '../types/search'
 
 const useStyles = makeStyles({
     sidebar: {
         gridRow: '2 / 4',
-        backgroundColor: tokens.colorNeutralBackground2,
+        backgroundColor: 'transparent',
         boxShadow: sidebarShadow,
         display: 'flex',
         flexDirection: 'column',
@@ -45,9 +42,6 @@ const useStyles = makeStyles({
     },
     sidebarNav: {
         flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: tokens.spacingVerticalXS,
     },
     sidebarBottom: {
         display: 'flex',
@@ -56,17 +50,9 @@ const useStyles = makeStyles({
         paddingTop: tokens.spacingVerticalM,
         borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
     },
-    navButton: {
+    bottomButton: {
         justifyContent: 'flex-start',
         width: '100%',
-        borderRadius: borderRadiusSmall,
-        transition: 'background-color 0.1s ease',
-    },
-    navButtonSelected: {
-        backgroundColor: tokens.colorNeutralBackground3,
-        ':hover': {
-            backgroundColor: tokens.colorNeutralBackground4,
-        },
     },
     searchBox: {
         marginBottom: tokens.spacingVerticalM,
@@ -84,7 +70,7 @@ const useStyles = makeStyles({
         alignItems: 'center',
         gap: tokens.spacingHorizontalS,
         padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
-        borderRadius: borderRadiusSmall,
+        borderRadius: '4px',
         cursor: 'pointer',
         ':hover': {
             backgroundColor: tokens.colorNeutralBackground3,
@@ -161,23 +147,13 @@ export default function Sidebar({
         [serverUrl, token]
     )
 
-    const navItems = [
-        {
-            key: 'library',
-            label: 'Library',
-            icon: currentPage === 'library' ? <Library20Filled /> : <Library20Regular />,
-        },
-        {
-            key: 'collections',
-            label: 'Collections',
-            icon: currentPage === 'collections' ? <Folder20Filled /> : <Folder20Regular />,
-        },
-        {
-            key: 'now-playing',
-            label: 'Now Playing',
-            icon: currentPage === 'now-playing' ? <MusicNote220Filled /> : <MusicNote220Regular />,
-        },
-    ]
+    const handleNavItemSelect = (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        _event: any,
+        data: { value: string }
+    ) => {
+        onNavigate(data.value)
+    }
 
     return (
         <div
@@ -189,6 +165,7 @@ export default function Sidebar({
                     className={styles.toggleButton}
                     icon={<Navigation20Regular />}
                     onClick={() => onCollapsedChange?.(!collapsed)}
+                    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 />
             </div>
 
@@ -266,29 +243,26 @@ export default function Sidebar({
                 </div>
             )}
 
-            <div className={styles.sidebarNav}>
-                {navItems.map((item) => (
-                    <Button
-                        key={item.key}
-                        appearance="subtle"
-                        className={`${styles.navButton} ${currentPage === item.key ? styles.navButtonSelected : ''}`}
-                        icon={item.icon}
-                        onClick={() => onNavigate(item.key)}
-                        style={
-                            currentPage === item.key
-                                ? { color: tokens.colorBrandForeground1 }
-                                : undefined
-                        }
-                    >
-                        {!collapsed && item.label}
-                    </Button>
-                ))}
-            </div>
+            <Nav
+                className={styles.sidebarNav}
+                selectedValue={currentPage}
+                onNavItemSelect={handleNavItemSelect}
+            >
+                <NavItem icon={<Library20Regular />} value="library">
+                    {!collapsed && 'Library'}
+                </NavItem>
+                <NavItem icon={<Folder20Regular />} value="collections">
+                    {!collapsed && 'Collections'}
+                </NavItem>
+                <NavItem icon={<MusicNote220Regular />} value="now-playing">
+                    {!collapsed && 'Now Playing'}
+                </NavItem>
+            </Nav>
 
             <div className={styles.sidebarBottom}>
                 <Button
                     appearance="subtle"
-                    className={styles.navButton}
+                    className={styles.bottomButton}
                     icon={<Settings20Regular />}
                     onClick={() => onNavigate('settings')}
                 >
@@ -297,7 +271,7 @@ export default function Sidebar({
                 {!collapsed && (
                     <Button
                         appearance="subtle"
-                        className={styles.navButton}
+                        className={styles.bottomButton}
                         icon={<Open20Regular />}
                         onClick={() =>
                             window.open('https://github.com/advplyr/audiobookshelf', '_blank')

@@ -1,16 +1,17 @@
 import { Button, makeStyles, Text, tokens } from '@fluentui/react-components'
-import { ArrowMinimize20Regular, Dismiss20Regular, Square20Regular } from '@fluentui/react-icons'
+import { ArrowMinimize16Regular, Dismiss16Regular, Square16Regular } from '@fluentui/react-icons'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const useStyles = makeStyles({
     titlebar: {
-        height: '32px',
+        height: '48px',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'start',
         justifyContent: 'space-between',
         paddingLeft: tokens.spacingHorizontalL,
-        paddingRight: tokens.spacingHorizontalS,
-        backgroundColor: tokens.colorNeutralBackground2,
+        paddingRight: 'none',
+        // backgroundColor: tokens.colorNeutralBackground2,
+        backgroundColor: 'transparent',
         userSelect: 'none',
         WebkitAppRegion: 'drag' as const,
     },
@@ -18,6 +19,18 @@ const useStyles = makeStyles({
         fontSize: '12px',
         fontWeight: 600,
         color: tokens.colorNeutralForeground2,
+    },
+    titleLogo: {
+        width: '16px',
+        height: '16px',
+        objectFit: 'contain',
+        flexShrink: 0,
+    },
+    titleLeft: {
+        display: 'flex',
+        alignItems: 'center',
+        alignSelf: 'center',
+        gap: tokens.spacingHorizontalM,
     },
     controls: {
         display: 'flex',
@@ -30,7 +43,12 @@ const useStyles = makeStyles({
         borderRadius: '0',
         backgroundColor: 'transparent',
         ':hover': {
-            backgroundColor: tokens.colorNeutralBackground4,
+            backgroundColor: tokens.colorBrandForeground1,
+            color: '#ffffff',
+            '& svg': {
+                color: '#ffffff',
+                fill: 'currentColor',
+            },
         },
     },
     closeButton: {
@@ -41,9 +59,11 @@ const useStyles = makeStyles({
         backgroundColor: 'transparent',
         ':hover': {
             backgroundColor: '#c42b1c',
-        },
-        ':hover .dismissIcon': {
             color: '#ffffff',
+            '& svg': {
+                color: '#ffffff',
+                fill: 'currentColor',
+            },
         },
     },
 })
@@ -65,26 +85,29 @@ export default function TitleBar() {
 
     return (
         <div className={styles.titlebar} data-tauri-drag-region>
-            <Text className={styles.titleText}>Booklight</Text>
+            <div className={styles.titleLeft}>
+                <img src="/Logo.png" alt="Booklight" className={styles.titleLogo} />
+                <Text className={styles.titleText}>Booklight</Text>
+            </div>
             <div className={styles.controls}>
                 <Button
                     appearance="subtle"
                     className={styles.controlButton}
-                    icon={<ArrowMinimize20Regular />}
+                    icon={<ArrowMinimize16Regular />}
                     onClick={handleMinimize}
                     aria-label="Minimize"
                 />
                 <Button
                     appearance="subtle"
                     className={styles.controlButton}
-                    icon={<Square20Regular />}
+                    icon={<Square16Regular />}
                     onClick={handleMaximize}
                     aria-label="Maximize"
                 />
                 <Button
                     appearance="subtle"
                     className={styles.closeButton}
-                    icon={<Dismiss20Regular />}
+                    icon={<Dismiss16Regular />}
                     onClick={handleClose}
                     aria-label="Close"
                 />

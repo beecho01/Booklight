@@ -128,7 +128,12 @@ function BookCard({ item, onClick }: BookCardProps) {
     }
 
     return (
-        <Card className={styles.bookCard} onClick={onClick} appearance="filled" size="small">
+        <Card
+            className={styles.bookCard}
+            onClick={onClick}
+            appearance="filled-alternative"
+            size="small"
+        >
             <div className={styles.coverWrapper}>
                 {coverUrl ? (
                     <img className={styles.coverImage} src={coverUrl} alt={title} loading="lazy" />
