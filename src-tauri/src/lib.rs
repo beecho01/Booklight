@@ -479,6 +479,27 @@ async fn get_open_sessions(
     api_get_open_sessions(&server_url, &token).await
 }
 
+#[tauri::command]
+fn set_mica_effect(app: tauri::AppHandle, is_dark: bool) -> Result<(), String> {
+    use tauri::window::{Color, Effect, EffectsBuilder};
+    if let Some(window) = app.get_webview_window("main") {
+        let effect = if is_dark {
+            Effect::MicaDark
+        } else {
+            Effect::MicaLight
+        };
+        window
+            .set_effects(
+                EffectsBuilder::new()
+                    .effect(effect)
+                    .color(Color(0, 0, 0, 0))
+                    .build(),
+            )
+            .map_err(|e| format!("Failed to set window effect: {}", e))?;
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -501,6 +522,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             get_system_accent_color,
+            set_mica_effect,
             login,
             authorize,
             login_with_token,

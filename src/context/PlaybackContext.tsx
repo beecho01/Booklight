@@ -8,6 +8,7 @@ import React, {
     useState,
 } from 'react'
 import * as itemsApi from '../api/items'
+import * as meApi from '../api/me'
 import * as sessionsApi from '../api/sessions'
 import type { Chapter, LibraryItemExpanded, MediaProgress } from '../types'
 
@@ -58,6 +59,10 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
     const syncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const sessionIdRef = useRef<string | null>(null)
     const pendingSeekRef = useRef<number | null>(null)
+    const pendingPlayRef = useRef<boolean>(false)
+    const stateRef = useRef<PlaybackState>(state)
+    // Keep stateRef in sync with state
+    stateRef.current = state
 
     // Helper: close the current session and sync final progress
     const closeCurrentSession = useCallback((currentTime?: number, duration?: number) => {
@@ -69,6 +74,11 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
         const ct = currentTime ?? audio?.currentTime ?? 0
         const dur = duration ?? audio?.duration ?? 0
         sessionsApi.closeSession(serverUrl, token, sid, ct, dur).catch(() => {})
+        // Also update progress via me/progress endpoint for reliability
+        const currentItemId = stateRef.current?.currentItem?.id
+        if (currentItemId) {
+            meApi.updateProgress(serverUrl, token, currentItemId, ct, dur, false).catch(() => {})
+        }
         sessionIdRef.current = null
         if (syncIntervalRef.current) {
             clearInterval(syncIntervalRef.current)
@@ -104,6 +114,13 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
                 audio.currentTime = pendingSeekRef.current
                 pendingSeekRef.current = null
             }
+            // If play was deferred until after metadata loads, trigger it now
+            if (pendingPlayRef.current) {
+                pendingPlayRef.current = false
+                audio.play().catch(() => {
+                    /* playback failed */
+                })
+            }
         })
 
         audio.addEventListener('ended', () => {
@@ -121,6 +138,22 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
                     syncIntervalRef.current = null
                 }
             }
+            // Mark as finished via updateProgress
+            const currentItemId = stateRef.current?.currentItem?.id
+            if (currentItemId) {
+                const serverUrl = localStorage.getItem('booklight_server_url') || ''
+                const token = localStorage.getItem('booklight_token') || ''
+                meApi
+                    .updateProgress(
+                        serverUrl,
+                        token,
+                        currentItemId,
+                        audio.duration || 0,
+                        audio.duration || 0,
+                        true
+                    )
+                    .catch(() => {})
+            }
             setState((prev) => ({ ...prev, isPlaying: false }))
         })
 
@@ -135,6 +168,7 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
         // Close session on window unload to sync final progress
         const handleBeforeUnload = () => {
             const sid = sessionIdRef.current
+            const currentItemId = stateRef.current?.currentItem?.id
             if (sid) {
                 const serverUrl = localStorage.getItem('booklight_server_url') || ''
                 const token = localStorage.getItem('booklight_token') || ''
@@ -143,6 +177,18 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
                 // Use sendBeacon for synchronous send on unload
                 const body = JSON.stringify({ currentTime: ct, duration: dur })
                 navigator.sendBeacon(`${serverUrl}/api/sessions/${sid}/close?token=${token}`, body)
+                // Also update progress via the me/progress endpoint
+                if (currentItemId) {
+                    const progressBody = JSON.stringify({
+                        currentTime: ct,
+                        duration: dur,
+                        isFinished: false,
+                    })
+                    navigator.sendBeacon(
+                        `${serverUrl}/api/me/progress/${currentItemId}?token=${token}`,
+                        progressBody
+                    )
+                }
             }
         }
         window.addEventListener('beforeunload', handleBeforeUnload)
@@ -156,7 +202,7 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     // Sync progress to server periodically while playing
-    const startSyncInterval = useCallback((serverUrl: string, token: string) => {
+    const startSyncInterval = useCallback((serverUrl: string, token: string, itemId: string) => {
         if (syncIntervalRef.current) clearInterval(syncIntervalRef.current)
         syncIntervalRef.current = setInterval(() => {
             const audio = audioRef.current
@@ -167,6 +213,17 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
                     .syncSession(serverUrl, token, sid, audio.currentTime, audio.duration || 0)
                     .catch(() => {})
             }
+            // Also update progress via the me/progress endpoint as a reliable fallback
+            meApi
+                .updateProgress(
+                    serverUrl,
+                    token,
+                    itemId,
+                    audio.currentTime,
+                    audio.duration || 0,
+                    false
+                )
+                .catch(() => {})
         }, 10000) // sync every 10s
     }, [])
 
@@ -188,7 +245,7 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
                 .startPlayback(serverUrl, token, item.id)
                 .then((session) => {
                     sessionIdRef.current = session.id
-                    startSyncInterval(serverUrl, token)
+                    startSyncInterval(serverUrl, token, item.id)
 
                     // Use the session's currentTime as the resume position
                     // The server knows where the user left off
@@ -196,7 +253,9 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
                         session.currentTime || item.userMediaProgress?.currentTime || 0
 
                     // Set the pending seek so loadedmetadata handler can apply it
+                    // Defer playback until after the seek to avoid starting from position 0
                     pendingSeekRef.current = startTime > 0 ? startTime : null
+                    pendingPlayRef.current = true
 
                     // Determine the streaming URL from the session's audioTracks
                     // For direct play: contentUrl is /api/items/{id}/file/{index} which needs auth headers
@@ -215,10 +274,8 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
                         streamUrl = `${serverUrl}/public/session/${session.id}/track/${trackIndex}`
                     }
 
+                    // Set the audio source — loadedmetadata will fire, then we seek and play
                     audio.src = streamUrl
-                    audio.play().catch(() => {
-                        /* playback failed */
-                    })
 
                     // Find the chapter matching the start time
                     const resumeChapter =
@@ -249,11 +306,25 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
             audio.pause()
             // Sync progress when pausing
             const sid = sessionIdRef.current
+            const serverUrl = localStorage.getItem('booklight_server_url') || ''
+            const token = localStorage.getItem('booklight_token') || ''
             if (sid) {
-                const serverUrl = localStorage.getItem('booklight_server_url') || ''
-                const token = localStorage.getItem('booklight_token') || ''
                 sessionsApi
                     .syncSession(serverUrl, token, sid, audio.currentTime, audio.duration || 0)
+                    .catch(() => {})
+            }
+            // Also update progress via the me/progress endpoint for reliability
+            const currentItemId = stateRef.current?.currentItem?.id
+            if (currentItemId) {
+                meApi
+                    .updateProgress(
+                        serverUrl,
+                        token,
+                        currentItemId,
+                        audio.currentTime,
+                        audio.duration || 0,
+                        false
+                    )
                     .catch(() => {})
             }
         }
@@ -269,7 +340,24 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
 
     const stop = useCallback(() => {
         const audio = audioRef.current
-        if (audio) {
+        const currentItemId = stateRef.current?.currentItem?.id
+        if (audio && currentItemId) {
+            // Update progress before stopping
+            const serverUrl = localStorage.getItem('booklight_server_url') || ''
+            const token = localStorage.getItem('booklight_token') || ''
+            meApi
+                .updateProgress(
+                    serverUrl,
+                    token,
+                    currentItemId,
+                    audio.currentTime,
+                    audio.duration || 0,
+                    false
+                )
+                .catch(() => {})
+            audio.pause()
+            audio.src = ''
+        } else if (audio) {
             audio.pause()
             audio.src = ''
         }

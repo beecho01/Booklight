@@ -1,9 +1,12 @@
-- [ ] Sync Listening Progress
+- [x] Sync Listening Progress
 - [x] Make Library Filter Function
-- [ ] Remove Export? (maybe)
+- [x] Remove Export (not supported by Audiobookshelf API)
 - [x] Clicking in Now Playing bar (not a button) shows Now Playing Screen
 - [x] Remove Dark Mode Toggle as it doubles up function with buttons
-- [ ] Show Listen progress in Book Cards
+- [x] Show Listen progress in Library Book Cards
 - [x] Get Brand colour to match system accent
 - [x] Store volume setting over application restarts
 - [x] Add README based on [Best-README-Template](https://raw.githubusercontent.com/othneildrew/Best-README-Template/refs/heads/main/BLANK_README.md)
+- [x] Better accept self-hosted endpoints using Cloudflare tunnels/connectors with Cloudflare headers are required
+- [x] Modal Detail card needs to use solid background rather than blurred translucent. Same with any dropdown/menus
+- [x] If progress is above 0, has listening history,  play button in Detail modal should show continue

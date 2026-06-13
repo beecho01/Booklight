@@ -16,18 +16,18 @@ import {
     ArrowDownload20Regular,
     ArrowSync20Regular,
     Filter20Regular,
-    Share20Regular,
     ZoomIn20Regular,
 } from '@fluentui/react-icons'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import * as itemsApi from '../api/items'
 import * as librariesApi from '../api/libraries'
+import * as meApi from '../api/me'
 import AudiobookDetailModal from '../components/AudiobookDetailModal'
 import BookCardGrid from '../components/BookCardGrid'
 import ZoomControl from '../components/ZoomControl'
 import { useAuth } from '../context/AuthContext'
-import type { LibraryItemExpanded } from '../types/audiobook'
+import type { LibraryItemExpanded, MediaProgress } from '../types/audiobook'
 import type { Library, LibraryFilterData } from '../types/library'
 
 const useStyles = makeStyles({
@@ -115,11 +115,32 @@ export default function LibraryPage() {
             setLibraries(libs)
             if (libs.length > 0) {
                 const bookLib = libs.find((l) => l.mediaType === 'book') || libs[0]
-                const [response, filters] = await Promise.all([
+                const [response, filters, currentUser] = await Promise.all([
                     librariesApi.getLibraryItems(serverUrl, token, bookLib.id),
                     librariesApi.getFilterData(serverUrl, token, bookLib.id).catch(() => null),
+                    meApi.getCurrentUser(serverUrl, token).catch(() => null),
                 ])
-                setItems(response.results)
+
+                // Build a progress map from the current user's mediaProgress
+                // The /api/libraries/:id/items endpoint returns minified data without userMediaProgress,
+                // so we merge progress data from the user's mediaProgress array (from GET /api/me)
+                const progressMap = new Map<string, MediaProgress>()
+                if (currentUser?.mediaProgress) {
+                    currentUser.mediaProgress
+                        .filter((mp) => mp.libraryItemId && !mp.episodeId)
+                        .forEach((mp) => progressMap.set(mp.libraryItemId!, mp))
+                }
+
+                // Merge progress data into library items
+                const itemsWithProgress = response.results.map((item) => {
+                    const progress = progressMap.get(item.id)
+                    if (progress) {
+                        return { ...item, userMediaProgress: progress }
+                    }
+                    return item
+                })
+
+                setItems(itemsWithProgress)
                 if (filters) setFilterData(filters)
             }
         } catch (err) {
@@ -266,9 +287,6 @@ export default function LibraryPage() {
                         onClick={handleScan}
                         disabled={scanning}
                     />
-                </Tooltip>
-                <Tooltip content="Export" relationship="label">
-                    <Button appearance="subtle" icon={<Share20Regular />} />
                 </Tooltip>
                 <Tooltip content="Zoom" relationship="label">
                     <Button

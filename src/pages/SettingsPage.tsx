@@ -18,6 +18,7 @@ import * as meApi from '../api/me'
 import { useAuth } from '../context/AuthContext'
 import { useServerConfig } from '../context/ServerConfigContext'
 import { useTheme } from '../context/ThemeContext'
+import { borderRadiusMedium, cardShadow, transitions } from '../theme'
 import { ListeningSession, ListeningStats } from '../types'
 
 const useStyles = makeStyles({
@@ -32,9 +33,10 @@ const useStyles = makeStyles({
         flexDirection: 'column',
         gap: tokens.spacingVerticalM,
         padding: tokens.spacingHorizontalL,
-        backgroundColor: tokens.colorNeutralBackground1,
-        borderRadius: '8px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+        backgroundColor: tokens.colorNeutralCardBackground,
+        borderRadius: borderRadiusMedium,
+        boxShadow: cardShadow,
+        transition: transitions.cardHover,
     },
     formField: {
         display: 'flex',

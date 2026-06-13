@@ -58,6 +58,7 @@
         "reqwest",
         "rgba",
         "rlib",
+        "rustls",
         "serde",
         "Ssdp",
         "staticlib",

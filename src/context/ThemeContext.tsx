@@ -17,11 +17,14 @@ export const booklightTheme: Theme = {
     colorNeutralBackground1: 'transparent',
     colorNeutralBackground2: 'rgba(245, 245, 245, 0.70)', // Sidebar
     colorNeutralBackground3: 'rgba(235, 235, 235, 0.70)', // Toolbar
-    colorNeutralBackgroundAlpha: 'rgba(255, 255, 255, 0.72)', // Frosted glass (now-playing bar)
+    colorNeutralBackgroundAlpha: 'rgba(255, 255, 255, 0.85)', // Frosted glass (now-playing bar)
     colorNeutralCardBackground: 'rgba(255, 255, 255, 0.70)', // Cards — matching WinUI 3 CardBackgroundFillColorDefault
     colorNeutralCardBackgroundHover: 'rgba(255, 255, 255, 0.80)',
     colorNeutralCardBackgroundPressed: 'rgba(255, 255, 255, 0.50)',
     colorNeutralCardBackgroundSelected: 'rgba(245, 245, 245, 0.70)',
+    // Solid opaque backgrounds for popup surfaces (dialogs, menus, dropdowns, tooltips)
+    colorNeutralBackground8: '#ffffff',
+    colorNeutralBackgroundStatic: '#fafafa',
 }
 
 export const booklightDarkTheme: Theme = {
@@ -59,7 +62,7 @@ export const booklightDarkTheme: Theme = {
     colorNeutralBackground4Selected: 'rgba(255, 255, 255, 0.04)',
     colorNeutralBackground5: 'rgba(255, 255, 255, 0.012)', // Deepest layer
     colorNeutralBackground6: 'rgba(255, 255, 255, 0.008)', // Deepest layer (rarely used)
-    colorNeutralBackgroundAlpha: 'rgba(255, 255, 255, 0.70)', // Frosted glass (now-playing bar)
+    colorNeutralBackgroundAlpha: 'rgba(30, 30, 30, 0.85)', // Frosted glass (now-playing bar)
     // Card backgrounds — most elevated surface, lightest tinge
     colorNeutralCardBackground: 'rgba(255, 255, 255, 0.070)',
     colorNeutralCardBackgroundHover: 'rgba(255, 255, 255, 0.082)',
@@ -75,6 +78,9 @@ export const booklightDarkTheme: Theme = {
     colorSubtleBackgroundLightAlphaHover: 'rgba(255, 255, 255, 0.04)',
     colorSubtleBackgroundLightAlphaPressed: 'rgba(255, 255, 255, 0.02)',
     colorSubtleBackgroundLightAlphaSelected: 'rgba(255, 255, 255, 0.03)',
+    // Solid opaque backgrounds for popup surfaces (dialogs, menus, dropdowns, tooltips)
+    colorNeutralBackground8: '#292929',
+    colorNeutralBackgroundStatic: '#1f1f1f',
 }
 
 type ThemeMode = 'light' | 'dark' | 'system'
@@ -147,6 +153,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 setAccentColor(null)
             })
     }, [])
+
+    // Sync Mica effect with theme (MicaDark / MicaLight)
+    useEffect(() => {
+        invoke('set_mica_effect', { isDark }).catch(() => {
+            // Non-Windows or unsupported — ignore
+        })
+    }, [isDark])
 
     const theme = useMemo(() => {
         const baseTheme = isDark ? booklightDarkTheme : booklightTheme

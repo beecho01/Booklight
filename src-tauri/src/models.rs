@@ -1,6 +1,91 @@
 use serde::{Deserialize, Deserializer, Serialize};
 
 // ============================================================
+// Loose f64 deserializer — handles both number and string formats
+// The Audiobookshelf API sometimes returns numeric fields as strings
+// (e.g. "11682.186469" instead of 11682.186469)
+// ============================================================
+
+fn deserialize_f64_loose<'de, D>(deserializer: D) -> Result<f64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de::{self, Visitor};
+    struct F64LooseVisitor;
+
+    impl<'de> Visitor<'de> for F64LooseVisitor {
+        type Value = f64;
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a number or a string that can be parsed as a number")
+        }
+        fn visit_f64<E: de::Error>(self, v: f64) -> Result<f64, E> {
+            Ok(v)
+        }
+        fn visit_i64<E: de::Error>(self, v: i64) -> Result<f64, E> {
+            Ok(v as f64)
+        }
+        fn visit_u64<E: de::Error>(self, v: u64) -> Result<f64, E> {
+            Ok(v as f64)
+        }
+        fn visit_str<E: de::Error>(self, v: &str) -> Result<f64, E> {
+            v.trim()
+                .parse::<f64>()
+                .map_err(|_| de::Error::custom(format!("invalid float string: {}", v)))
+        }
+        fn visit_none<E: de::Error>(self) -> Result<f64, E> {
+            Ok(0.0)
+        }
+        fn visit_unit<E: de::Error>(self) -> Result<f64, E> {
+            Ok(0.0)
+        }
+    }
+
+    deserializer.deserialize_any(F64LooseVisitor)
+}
+
+fn deserialize_option_f64_loose<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de::{self, Visitor};
+    struct OptionF64LooseVisitor;
+
+    impl<'de> Visitor<'de> for OptionF64LooseVisitor {
+        type Value = Option<f64>;
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a number, a string that can be parsed as a number, or null")
+        }
+        fn visit_f64<E: de::Error>(self, v: f64) -> Result<Option<f64>, E> {
+            Ok(Some(v))
+        }
+        fn visit_i64<E: de::Error>(self, v: i64) -> Result<Option<f64>, E> {
+            Ok(Some(v as f64))
+        }
+        fn visit_u64<E: de::Error>(self, v: u64) -> Result<Option<f64>, E> {
+            Ok(Some(v as f64))
+        }
+        fn visit_str<E: de::Error>(self, v: &str) -> Result<Option<f64>, E> {
+            if v.trim().is_empty() {
+                Ok(None)
+            } else {
+                v.trim()
+                    .parse::<f64>()
+                    .map(Some)
+                    .map_err(|_| de::Error::custom(format!("invalid float string: {}", v)))
+            }
+        }
+        fn visit_none<E: de::Error>(self) -> Result<Option<f64>, E> {
+            Ok(None)
+        }
+        fn visit_unit<E: de::Error>(self) -> Result<Option<f64>, E> {
+            Ok(None)
+        }
+    }
+
+    deserializer.deserialize_any(OptionF64LooseVisitor)
+}
+
+// ============================================================
 // Author / Series
 // ============================================================
 
@@ -116,7 +201,9 @@ pub struct BookMetadata {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Chapter {
     pub id: i32,
+    #[serde(deserialize_with = "deserialize_f64_loose")]
     pub start: f64,
+    #[serde(deserialize_with = "deserialize_f64_loose")]
     pub end: f64,
     pub title: String,
 }
@@ -130,6 +217,7 @@ pub struct Media {
     pub num_tracks: Option<i32>,
     #[serde(rename = "numAudioFiles")]
     pub num_audio_files: Option<i32>,
+    #[serde(default, deserialize_with = "deserialize_option_f64_loose")]
     pub duration: Option<f64>,
     #[serde(default)]
     pub chapters: Vec<Chapter>,
@@ -144,21 +232,39 @@ pub struct Media {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MediaProgress {
     pub id: String,
-    #[serde(rename = "libraryItemId")]
-    pub library_item_id: String,
-    #[serde(rename = "episodeId")]
+    #[serde(rename = "libraryItemId", default)]
+    pub library_item_id: Option<String>,
+    #[serde(rename = "episodeId", default)]
     pub episode_id: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_f64_loose")]
     pub duration: f64,
+    #[serde(default, deserialize_with = "deserialize_f64_loose")]
     pub progress: f64,
-    #[serde(rename = "currentTime")]
+    #[serde(
+        rename = "currentTime",
+        default,
+        deserialize_with = "deserialize_f64_loose"
+    )]
     pub current_time: f64,
-    #[serde(rename = "isFinished")]
+    #[serde(rename = "isFinished", default)]
     pub is_finished: bool,
-    #[serde(rename = "lastUpdate")]
+    #[serde(
+        rename = "lastUpdate",
+        default,
+        deserialize_with = "deserialize_f64_loose"
+    )]
     pub last_update: f64,
-    #[serde(rename = "startedAt", default)]
+    #[serde(
+        rename = "startedAt",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub started_at: Option<f64>,
-    #[serde(rename = "finishedAt", default)]
+    #[serde(
+        rename = "finishedAt",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub finished_at: Option<f64>,
 }
 
@@ -176,12 +282,19 @@ pub struct LibraryItem {
     pub library_id: String,
     #[serde(rename = "folderId")]
     pub folder_id: Option<String>,
-    #[serde(rename = "addedAt")]
+    #[serde(rename = "addedAt", deserialize_with = "deserialize_f64_loose")]
     pub added_at: f64,
-    #[serde(rename = "updatedAt")]
+    #[serde(
+        rename = "updatedAt",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub updated_at: Option<f64>,
-    #[serde(rename = "isMissing")]
+    #[serde(rename = "isMissing", default)]
     pub is_missing: Option<bool>,
+    #[serde(rename = "isInvalid", default)]
+    pub is_invalid: Option<bool>,
+    #[serde(default, deserialize_with = "deserialize_option_f64_loose")]
     pub size: Option<f64>,
     #[serde(rename = "userMediaProgress")]
     pub user_media_progress: Option<MediaProgress>,
@@ -210,7 +323,11 @@ pub struct Library {
     pub display_order: Option<i32>,
     pub icon: Option<String>,
     pub provider: Option<String>,
-    #[serde(rename = "lastScan")]
+    #[serde(
+        rename = "lastScan",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub last_scan: Option<f64>,
     #[serde(rename = "lastScanVersion")]
     pub last_scan_version: Option<String>,
@@ -274,7 +391,11 @@ pub struct User {
     pub libraries_accessible: Option<Vec<String>>,
     #[serde(rename = "isActive", default = "default_true")]
     pub is_active: Option<bool>,
-    #[serde(rename = "createdAt", default)]
+    #[serde(
+        rename = "createdAt",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub created_at: Option<f64>,
 }
 
@@ -320,8 +441,13 @@ pub struct PersonalizedShelf {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AudioTrack {
     pub index: i32,
-    #[serde(rename = "startOffset", default)]
+    #[serde(
+        rename = "startOffset",
+        default,
+        deserialize_with = "deserialize_f64_loose"
+    )]
     pub start_offset: f64,
+    #[serde(deserialize_with = "deserialize_f64_loose")]
     pub duration: f64,
     pub title: Option<String>,
     #[serde(rename = "contentUrl", default)]
@@ -341,8 +467,9 @@ pub struct PlaybackSession {
     pub display_title: String,
     #[serde(rename = "displayAuthor")]
     pub display_author: Option<String>,
+    #[serde(deserialize_with = "deserialize_f64_loose")]
     pub duration: f64,
-    #[serde(rename = "currentTime")]
+    #[serde(rename = "currentTime", deserialize_with = "deserialize_f64_loose")]
     pub current_time: f64,
     #[serde(rename = "coverPath")]
     pub cover_path: Option<String>,
@@ -356,9 +483,17 @@ pub struct PlaybackSession {
     pub user_id: Option<String>,
     #[serde(rename = "mediaPlayer", default)]
     pub media_player: Option<String>,
-    #[serde(rename = "startedAt", default)]
+    #[serde(
+        rename = "startedAt",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub started_at: Option<f64>,
-    #[serde(rename = "updatedAt", default)]
+    #[serde(
+        rename = "updatedAt",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub updated_at: Option<f64>,
 }
 
@@ -374,13 +509,25 @@ pub struct Collection {
     pub name: String,
     #[serde(default)]
     pub description: Option<String>,
-    #[serde(rename = "coverAspectRatio", default)]
+    #[serde(
+        rename = "coverAspectRatio",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub cover_aspect_ratio: Option<f64>,
     #[serde(default)]
     pub books: Vec<String>,
-    #[serde(rename = "lastUpdate", default)]
+    #[serde(
+        rename = "lastUpdate",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub last_update: Option<f64>,
-    #[serde(rename = "createdAt", default)]
+    #[serde(
+        rename = "createdAt",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub created_at: Option<f64>,
 }
 
@@ -396,9 +543,17 @@ pub struct Playlist {
     pub description: Option<String>,
     #[serde(default)]
     pub items: Vec<PlaylistItem>,
-    #[serde(rename = "lastUpdate", default)]
+    #[serde(
+        rename = "lastUpdate",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub last_update: Option<f64>,
-    #[serde(rename = "createdAt", default)]
+    #[serde(
+        rename = "createdAt",
+        default,
+        deserialize_with = "deserialize_option_f64_loose"
+    )]
     pub created_at: Option<f64>,
 }
 
@@ -431,7 +586,7 @@ pub struct PodcastEpisode {
     pub description: Option<String>,
     #[serde(rename = "pubDate", default)]
     pub pub_date: Option<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_option_f64_loose")]
     pub duration: Option<f64>,
     #[serde(rename = "episode", default)]
     pub episode_number: Option<String>,
@@ -470,7 +625,11 @@ pub struct SearchResult {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ListeningStats {
-    #[serde(rename = "totalTime", default)]
+    #[serde(
+        rename = "totalTime",
+        default,
+        deserialize_with = "deserialize_f64_loose"
+    )]
     pub total_time: f64,
     #[serde(default)]
     pub items: Option<serde_json::Value>,
@@ -490,7 +649,8 @@ pub struct UserBookmark {
     #[serde(rename = "libraryItemId")]
     pub library_item_id: String,
     pub title: String,
+    #[serde(deserialize_with = "deserialize_f64_loose")]
     pub time: f64,
-    #[serde(rename = "createdAt")]
+    #[serde(rename = "createdAt", deserialize_with = "deserialize_f64_loose")]
     pub created_at: f64,
 }

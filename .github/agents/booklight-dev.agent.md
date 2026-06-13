@@ -19,6 +19,7 @@ You are a specialist developer for **Booklight**, a native Windows desktop clien
 -   DO NOT use plain CSS or CSS modules — use `makeStyles` from `@fluentui/react-components` for all styling
 -   DO NOT use `className` for dynamic styles — use Fluent UI's `className` prop with `makeStyles` tokens
 -   DO NOT use Tauri v1 allowlist in `tauri.conf.json` — use Tauri v2 capabilities in `src-tauri/capabilities/` instead
+-   DO NOT use `for...of` loops in TypeScript — the project ESLint config forbids iterators/generators. Use array methods like `.forEach()`, `.map()`, `.filter()`, `.reduce()` instead
 
 ## Approach
 
@@ -36,8 +37,8 @@ Booklight uses the HTML5 Audio API for playback. The flow is:
 
 1. **Start playback**: Call `start_playback` Tauri command → Audiobookshelf `POST /api/items/:id/play` with `forceDirectPlay: true` and `deviceInfo` → returns a `PlaybackSession` with `audioTracks` and `currentTime`
 2. **Build streaming URL**: Use `/public/session/{sessionId}/track/{index}` (public endpoint, no auth headers needed) — do NOT use `audioTracks[].contentUrl` which points to `/api/items/{id}/file/{index}` requiring auth headers that HTML5 Audio can't set
-3. **Resume from last position**: The `PlaybackSession.currentTime` from the server response contains the user's last listening position. Store it in `pendingSeekRef` and apply after `loadedmetadata` fires on the Audio element (setting `currentTime` before metadata loads silently fails)
-4. **Session sync**: Every 10 seconds, call `sync_session` to sync `currentTime` and `duration` back to the server. On pause/close, call `close_session`
+3. **Resume from last position**: The `PlaybackSession.currentTime` from the server response contains the user's last listening position. Store it in `pendingSeekRef` and apply after `loadedmetadata` fires on the Audio element (setting `currentTime` before metadata loads silently fails). **Do NOT call `audio.play()` immediately after setting `audio.src`** — defer play until after `loadedmetadata` fires and the seek is applied, using a `pendingPlayRef` flag.
+4. **Session sync**: Every 10 seconds, call `sync_session` to sync `currentTime` and `duration` back to the server. On pause/close, call `close_session`. Also call `meApi.updateProgress()` on pause, stop, ended, and `beforeunload` events to ensure progress is persisted even if the session sync interval hasn't fired yet.
 5. **Progress tracking**: The `PlaybackContext` manages the HTML5 Audio element via `useRef`, handles `timeupdate`, `loadedmetadata`, `ended` events, and exposes `playItem`, `togglePlayPause`, `seek`, `skipForward`, `skipBackward` controls
 
 ## Design System — Booklight Windows 11 UI
@@ -62,7 +63,7 @@ const booklightTheme: Theme = {
     colorNeutralBackground1: 'transparent', // Main content (Mica shows through)
     colorNeutralBackground2: 'rgba(245, 245, 245, 0.65)', // Sidebar, secondary surfaces
     colorNeutralBackground3: 'rgba(235, 235, 235, 0.70)', // Toolbar, compact strips
-    colorNeutralBackgroundAlpha: 'rgba(255, 255, 255, 0.72)', // Frosted glass (now-playing bar)
+    colorNeutralBackgroundAlpha: 'rgba(255, 255, 255, 0.85)', // Frosted glass (now-playing bar) — 0.72 too transparent against Mica
     // Semantic
     colorPaletteGreenBackground1: '#0E7A6E', // Success/complete states
     colorPaletteGreenForeground1: '#0E7A6E', // Progress indicators
@@ -583,7 +584,7 @@ const booklightDarkTheme: Theme = {
     colorNeutralBackground1: 'transparent', // Main content (Mica shows through)
     colorNeutralBackground2: 'rgba(37, 37, 37, 0.65)', // Sidebar
     colorNeutralBackground3: 'rgba(45, 45, 45, 0.70)', // Toolbar
-    colorNeutralBackgroundAlpha: 'rgba(30, 30, 30, 0.72)', // Frosted glass dark
+    colorNeutralBackgroundAlpha: 'rgba(30, 30, 30, 0.85)', // Frosted glass dark — must use dark overlay, NOT white
 }
 ```
 
@@ -623,6 +624,7 @@ Booklight uses two Tauri windows. The mini-player is a separate window that comm
 -   The main window uses Windows Mica effect with `transparent: true` and `decorations: false`
 -   A custom `TitleBar.tsx` component provides window controls (minimize, maximize, close) using Tauri's window API
 -   The Mica effect requires the entire DOM tree to have transparent backgrounds (enforced in `styles.css`)
+-   **Fluent UI popovers, dropdowns, and dialogs need solid backgrounds** — because the main window is transparent for Mica, Fluent UI popup surfaces (Popover, Menu, Dialog, Dropdown) inherit transparency and become see-through. Override their backgrounds with solid colors: light mode `#ffffff`, dark mode `#292929`. Use `makeStyles` targeting `.fui-PopoverSurface`, `.fui-MenuSurface`, `.fui-DialogSurface` etc.
 -   **Mini-player window**: Not yet implemented. When added, it will be a separate Tauri window (`label: "miniplayer"`, `width: 380`, `height: 96`, `decorations: false`, `alwaysOnTop: true`, `resizable: false`, `visible: false`) that communicates with the main window via Tauri events
 
 ### Audiobookshelf Data Model for Detail Modal
@@ -806,7 +808,14 @@ The Audiobookshelf server exposes a REST API at `/api/` with these key domains:
 
 -   `GET /api/libraries/:id/items` **always** calls `toOldJSONMinified()` internally, regardless of query params. The `expanded=1` param is **NOT supported** on this endpoint — it only works on `GET /api/items/:id`.
 -   Minified format returns `media.metadata.authorName` (flat string, e.g. `"Andy Weir"`) instead of `media.metadata.authors` (array of `{id, name}` objects). Similarly, `narratorName` and `seriesName` are flat strings.
+-   **Minified items do NOT include `userMediaProgress`** — this field is only present on `GET /api/items/:id?expanded=1`.
 -   When displaying author names, always use this fallback chain: `metadata.authors?.map(a => a.name).join(', ')` → `metadata.authorName` → `media.authorName` → `"Unknown"`
+
+**Getting user media progress for library items:**
+
+-   Since `/api/libraries/:id/items` doesn't include `userMediaProgress`, you must fetch progress separately.
+-   **Use `GET /api/me`** which returns the current user object with a `mediaProgress` array. Each `MediaProgress` entry has `libraryItemId` and `progress` (0-1). Build a `Map<libraryItemId, MediaProgress>` and merge into library items.
+-   **Do NOT use `GET /api/me/items-in-progress`** for progress data — it returns `{ libraryItems: [...] }` (wrapped object, not a flat array) and the items use `toOldJSONMinified()` which does NOT include `userMediaProgress`. It only adds `progressLastUpdate` and `recentEpisode` fields.
 
 **Single Item endpoint returns full data:**
 
@@ -816,6 +825,9 @@ The Audiobookshelf server exposes a REST API at `/api/` with these key domains:
 
 -   `BookMetadata` must have `authorName`, `narratorName`, `seriesName` as `Option<String>` with `#[serde(default)]` to handle both minified and expanded responses.
 -   The `authors` field uses a custom deserializer (`deserialize_authors`) because the API can return either `[{id, name}]` (expanded) or `[]` (minified — empty array when authors aren't expanded).
+-   **All `f64` fields in Rust models must use `deserialize_f64_loose`** — the Audiobookshelf API sometimes returns numeric fields as strings (e.g. `"11682.186469"` instead of `11682.186469`). Use `deserialize_f64_loose` for required `f64` fields and `deserialize_option_f64_loose` for `Option<f64>` fields. Both handle number, string, and null values gracefully.
+-   **`MediaProgress.libraryItemId` must be `Option<String>`** — the API can return `null` for this field (from `this.extraData?.libraryItemId || null` in `getOldMediaProgress()`). Add `#[serde(default)]` to all `MediaProgress` fields.
+-   **Cloudflare tunnels support**: The reqwest client uses `danger_accept_invalid_certs(true)` and `redirect(Policy::limited(10))` via `build_client()` to handle self-hosted endpoints behind Cloudflare tunnels that may use custom SSL certificates and redirect chains.
 
 ## Project Structure Conventions
 

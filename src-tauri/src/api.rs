@@ -16,12 +16,24 @@ fn build_headers(token: &str) -> reqwest::header::HeaderMap {
     headers
 }
 
+/// Build a reqwest Client that handles self-hosted endpoints including Cloudflare tunnels.
+/// - Follows redirects (HTTP→HTTPS, Cloudflare tunnel routing)
+/// - Accepts invalid/self-signed certificates (common with self-hosted instances)
+/// - Uses system native TLS root certificates for Cloudflare tunnel endpoints
+fn build_client() -> Result<Client, String> {
+    Client::builder()
+        .redirect(reqwest::redirect::Policy::limited(10))
+        .danger_accept_invalid_certs(true)
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))
+}
+
 pub async fn api_login(
     server_url: &str,
     username: &str,
     password: &str,
 ) -> Result<LoginResponse, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let mut body = HashMap::new();
     body.insert("username", username);
     body.insert("password", password);
@@ -76,7 +88,7 @@ pub async fn api_login(
 }
 
 pub async fn api_authorize(server_url: &str, token: &str) -> Result<LoginResponse, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .post(build_url(server_url, "/api/authorize"))
         .header("Authorization", format!("Bearer {}", token))
@@ -132,7 +144,7 @@ pub async fn api_authorize(server_url: &str, token: &str) -> Result<LoginRespons
 }
 
 pub async fn api_get_server_status(server_url: &str) -> Result<ServerStatus, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/status"))
         .send()
@@ -150,7 +162,7 @@ pub async fn api_get_server_status(server_url: &str) -> Result<ServerStatus, Str
 }
 
 pub async fn api_get_libraries(server_url: &str, token: &str) -> Result<Vec<Library>, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/libraries"))
         .headers(build_headers(token))
@@ -193,7 +205,7 @@ pub async fn api_get_library(
     token: &str,
     library_id: &str,
 ) -> Result<Library, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/libraries/{}", library_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -217,7 +229,7 @@ pub async fn api_get_library_items(
     token: &str,
     library_id: &str,
 ) -> Result<LibraryItemsResponse, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!(
         "/api/libraries/{}/items?limit=100&sort=addedAt&desc=1",
         library_id
@@ -258,7 +270,7 @@ pub async fn api_get_personalized(
     token: &str,
     library_id: &str,
 ) -> Result<Vec<PersonalizedShelf>, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/libraries/{}/personalized", library_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -289,7 +301,7 @@ pub async fn api_get_item(
     token: &str,
     item_id: &str,
 ) -> Result<LibraryItem, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/items/{}?expanded=1", item_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -309,7 +321,7 @@ pub async fn api_get_item(
 }
 
 pub async fn api_get_current_user(server_url: &str, token: &str) -> Result<User, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/me"))
         .headers(build_headers(token))
@@ -336,7 +348,7 @@ pub async fn api_update_progress(
     is_finished: bool,
     episode_id: Option<&str>,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let mut path = format!("/api/me/progress/{}", library_item_id);
     if let Some(ep_id) = episode_id {
         path = format!("{}/{}", path, ep_id);
@@ -368,7 +380,7 @@ pub async fn api_start_playback(
     item_id: &str,
     episode_id: Option<&str>,
 ) -> Result<PlaybackSession, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = if let Some(ep_id) = episode_id {
         format!("/api/items/{}/play/{}", item_id, ep_id)
     } else {
@@ -408,7 +420,7 @@ pub async fn api_scan_library(
     token: &str,
     library_id: &str,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/libraries/{}/scan", library_id);
     let response = client
         .post(build_url(server_url, &path))
@@ -431,7 +443,7 @@ pub async fn api_sync_session(
     current_time: f64,
     duration: f64,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/sessions/{}/sync", session_id);
 
     let mut body = HashMap::new();
@@ -460,7 +472,7 @@ pub async fn api_close_session(
     current_time: f64,
     duration: f64,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/sessions/{}/close", session_id);
 
     let mut body = HashMap::new();
@@ -491,7 +503,7 @@ pub async fn api_get_filter_data(
     token: &str,
     library_id: &str,
 ) -> Result<LibraryFilterData, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/libraries/{}/filterdata", library_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -520,7 +532,7 @@ pub async fn api_search_library(
     library_id: &str,
     query: &str,
 ) -> Result<serde_json::Value, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!(
         "/api/libraries/{}/search?q={}",
         library_id,
@@ -552,7 +564,7 @@ pub async fn api_search(
     token: &str,
     query: &str,
 ) -> Result<serde_json::Value, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/search?q={}", urlencoding::encode(query));
     let response = client
         .get(build_url(server_url, &path))
@@ -579,7 +591,7 @@ pub async fn api_get_listening_sessions(
     server_url: &str,
     token: &str,
 ) -> Result<serde_json::Value, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/me/listening-sessions"))
         .headers(build_headers(token))
@@ -604,7 +616,7 @@ pub async fn api_get_listening_stats(
     server_url: &str,
     token: &str,
 ) -> Result<ListeningStats, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/me/listening-stats"))
         .headers(build_headers(token))
@@ -629,7 +641,7 @@ pub async fn api_get_items_in_progress(
     server_url: &str,
     token: &str,
 ) -> Result<serde_json::Value, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/me/items-in-progress"))
         .headers(build_headers(token))
@@ -656,7 +668,7 @@ pub async fn api_get_media_progress(
     library_item_id: &str,
     episode_id: Option<&str>,
 ) -> Result<serde_json::Value, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = if let Some(ep_id) = episode_id {
         format!("/api/me/progress/{}/{}", library_item_id, ep_id)
     } else {
@@ -689,7 +701,7 @@ pub async fn api_create_bookmark(
     time: f64,
     title: String,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/me/item/{}/bookmark", library_item_id);
     let body = serde_json::json!({
         "time": time,
@@ -716,7 +728,7 @@ pub async fn api_delete_bookmark(
     library_item_id: &str,
     time: f64,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/me/item/{}/bookmark/{}", library_item_id, time);
     let response = client
         .delete(build_url(server_url, &path))
@@ -737,7 +749,7 @@ pub async fn api_delete_bookmark(
 // ============================================================
 
 pub async fn api_get_collections(server_url: &str, token: &str) -> Result<Vec<Collection>, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/collections"))
         .headers(build_headers(token))
@@ -768,7 +780,7 @@ pub async fn api_get_collection(
     token: &str,
     collection_id: &str,
 ) -> Result<Collection, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/collections/{}", collection_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -795,7 +807,7 @@ pub async fn api_create_collection(
     description: Option<&str>,
     books: Vec<String>,
 ) -> Result<Collection, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let mut body = serde_json::json!({
         "libraryId": library_id,
         "name": name,
@@ -833,7 +845,7 @@ pub async fn api_update_collection(
     description: Option<&str>,
     books: Option<Vec<String>>,
 ) -> Result<Collection, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/collections/{}", collection_id);
     let mut body = serde_json::json!({});
     if let Some(n) = name {
@@ -871,7 +883,7 @@ pub async fn api_delete_collection(
     token: &str,
     collection_id: &str,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/collections/{}", collection_id);
     let response = client
         .delete(build_url(server_url, &path))
@@ -895,7 +907,7 @@ pub async fn api_delete_collection(
 // ============================================================
 
 pub async fn api_get_playlists(server_url: &str, token: &str) -> Result<Vec<Playlist>, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/playlists"))
         .headers(build_headers(token))
@@ -925,7 +937,7 @@ pub async fn api_get_playlist(
     token: &str,
     playlist_id: &str,
 ) -> Result<Playlist, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/playlists/{}", playlist_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -952,7 +964,7 @@ pub async fn api_create_playlist(
     description: Option<&str>,
     items: Vec<PlaylistItem>,
 ) -> Result<Playlist, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let mut body = serde_json::json!({
         "libraryId": library_id,
         "name": name,
@@ -984,7 +996,7 @@ pub async fn api_delete_playlist(
     token: &str,
     playlist_id: &str,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/playlists/{}", playlist_id);
     let response = client
         .delete(build_url(server_url, &path))
@@ -1005,7 +1017,7 @@ pub async fn api_delete_playlist(
 // ============================================================
 
 pub async fn api_get_authors(server_url: &str, token: &str) -> Result<Vec<Author>, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/authors"))
         .headers(build_headers(token))
@@ -1035,7 +1047,7 @@ pub async fn api_get_author(
     token: &str,
     author_id: &str,
 ) -> Result<Author, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/authors/{}", author_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -1062,7 +1074,7 @@ pub async fn api_update_author(
     description: Option<&str>,
     asin: Option<&str>,
 ) -> Result<Author, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/authors/{}", author_id);
     let mut body = serde_json::json!({});
     if let Some(n) = name {
@@ -1101,7 +1113,7 @@ pub async fn api_get_series(
     token: &str,
     library_id: &str,
 ) -> Result<Vec<Series>, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/libraries/{}/series", library_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -1132,7 +1144,7 @@ pub async fn api_get_series_by_id(
     token: &str,
     series_id: &str,
 ) -> Result<Series, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/series/{}", series_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -1161,7 +1173,7 @@ pub async fn api_update_item_media(
     item_id: &str,
     metadata: serde_json::Value,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/items/{}/media", item_id);
     let body = serde_json::json!({ "metadata": metadata });
     let response = client
@@ -1189,7 +1201,7 @@ pub async fn api_match_item(
     provider: &str,
     query: Option<&str>,
 ) -> Result<serde_json::Value, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/items/{}/match", item_id);
     let mut body = serde_json::json!({ "provider": provider });
     if let Some(q) = query {
@@ -1222,7 +1234,7 @@ pub async fn api_check_podcast_new_episodes(
     token: &str,
     podcast_id: &str,
 ) -> Result<serde_json::Value, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/podcasts/{}/checknew", podcast_id);
     let response = client
         .get(build_url(server_url, &path))
@@ -1250,7 +1262,7 @@ pub async fn api_download_podcast_episodes(
     podcast_id: &str,
     episodes: Vec<serde_json::Value>,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = build_client()?;
     let path = format!("/api/podcasts/{}/download-episodes", podcast_id);
     let body = serde_json::json!({ "episodes": episodes });
     let response = client
@@ -1279,7 +1291,7 @@ pub async fn api_get_open_sessions(
     server_url: &str,
     token: &str,
 ) -> Result<Vec<PlaybackSession>, String> {
-    let client = Client::new();
+    let client = build_client()?;
     let response = client
         .get(build_url(server_url, "/api/sessions/open"))
         .headers(build_headers(token))

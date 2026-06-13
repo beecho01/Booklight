@@ -73,7 +73,7 @@ export interface LibraryItem {
 
 export interface MediaProgress {
     id: string
-    libraryItemId: string
+    libraryItemId: string | null
     episodeId?: string | null
     duration: number
     progress: number // 0-1

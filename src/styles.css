@@ -19,37 +19,36 @@ body,
     background: transparent !important;
 }
 
-/* Surface overrides: colorNeutralBackground1 is transparent for Mica, but popup surfaces need opaque/semi-opaque backgrounds */
+/* Surface overrides: popup surfaces need solid opaque backgrounds for readability */
 
 /* Dialog surfaces */
 .fui-DialogSurface {
-    background-color: var(--colorNeutralBackground2) !important;
-    backdrop-filter: blur(20px) saturate(180%);
+    background-color: var(--colorNeutralBackground8) !important;
+    backdrop-filter: none !important;
 }
-*/
 
 /* Popover surfaces (volume popover, etc.) */
 .fui-PopoverSurface {
-    background-color: var(--colorNeutralBackground2) !important;
-    backdrop-filter: blur(20px) saturate(180%);
+    background-color: var(--colorNeutralBackground8) !important;
+    backdrop-filter: none !important;
 }
 
 /* Dropdown / Select listbox surfaces */
 .fui-Listbox {
-    background-color: var(--colorNeutralBackground2) !important;
-    backdrop-filter: blur(20px) saturate(180%);
+    background-color: var(--colorNeutralBackground8) !important;
+    backdrop-filter: none !important;
 }
 
 /* Menu popover surfaces */
 .fui-MenuPopover {
-    background-color: var(--colorNeutralBackground2) !important;
-    backdrop-filter: blur(20px) saturate(180%);
+    background-color: var(--colorNeutralBackground8) !important;
+    backdrop-filter: none !important;
 }
 
 /* Tooltip content */
 .fui-Tooltip__content {
-    background-color: var(--colorNeutralBackground2) !important;
-    backdrop-filter: blur(20px) saturate(180%);
+    background-color: var(--colorNeutralBackground8) !important;
+    backdrop-filter: none !important;
 }
 
 /* Card surfaces (book cards, etc.) */

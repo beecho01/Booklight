@@ -1,13 +1,5 @@
-import {
-    Badge,
-    Button,
-    Card,
-    CounterBadge,
-    makeStyles,
-    Text,
-    tokens,
-} from '@fluentui/react-components'
-import { Play20Filled } from '@fluentui/react-icons'
+import { Button, Card, makeStyles, Text, tokens } from '@fluentui/react-components'
+import { Checkmark20Filled, Play20Filled } from '@fluentui/react-icons'
 import { usePlayback } from '../context/PlaybackContext'
 import { borderRadiusMedium, cardHoverShadow, cardShadow, transitions } from '../theme'
 import type { LibraryItemExpanded } from '../types/audiobook'
@@ -34,7 +26,7 @@ const useStyles = makeStyles({
         width: '100%',
         aspectRatio: '1 / 1',
         overflow: 'hidden',
-        borderRadius: borderRadiusMedium,
+        borderRadius: `${borderRadiusMedium}`,
     },
     coverImage: {
         width: '100%',
@@ -50,10 +42,64 @@ const useStyles = makeStyles({
         justifyContent: 'center',
         fontSize: '48px',
     },
-    progressBadge: {
+    progressRingContainer: {
         position: 'absolute',
-        bottom: tokens.spacingHorizontalS,
-        right: tokens.spacingHorizontalS,
+        bottom: '8px',
+        right: '8px',
+        width: '40px',
+        height: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    progressRingSvg: {
+        position: 'absolute',
+        inset: '0',
+        width: '40px',
+        height: '40px',
+        transform: 'rotate(-90deg)',
+    },
+    progressRingTrack: {
+        fill: 'none',
+        stroke: 'rgba(255, 255, 255, 0.3)',
+        strokeWidth: '3',
+    },
+    progressRingFill: {
+        fill: 'none',
+        stroke: tokens.colorBrandBackground,
+        strokeWidth: '3',
+        strokeLinecap: 'round',
+        transition: 'stroke-dashoffset 0.3s ease',
+    },
+    progressRingBg: {
+        position: 'absolute',
+        inset: '0',
+        borderRadius: '50%',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    progressRingLabel: {
+        position: 'relative',
+        zIndex: 1,
+        color: '#FFFFFF',
+        fontSize: '9px',
+        fontWeight: '600',
+        lineHeight: '1',
+        fontFamily: 'system-ui',
+    },
+    finishedBadge: {
+        position: 'absolute',
+        bottom: '8px',
+        right: '8px',
+        width: '28px',
+        height: '28px',
+        borderRadius: '50%',
+        backgroundColor: tokens.colorPaletteGreenBackground1,
+        color: '#FFFFFF',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '14px',
+        fontWeight: '600',
     },
     playOverlay: {
         position: 'absolute',
@@ -127,6 +173,12 @@ function BookCard({ item, onClick }: BookCardProps) {
         playback.playItem(item)
     }
 
+    // Circular progress ring calculations
+    const radius = 15
+    const circumference = 2 * Math.PI * radius
+    const dashOffset = progress ? circumference * (1 - progress.progress) : circumference
+    const progressPercent = progress ? Math.round(progress.progress * 100) : 0
+
     return (
         <Card
             className={styles.bookCard}
@@ -151,19 +203,30 @@ function BookCard({ item, onClick }: BookCardProps) {
                     />
                 </div>
                 {progress && !progress.isFinished && progress.progress > 0 && (
-                    <div className={styles.progressBadge}>
-                        <CounterBadge
-                            count={Math.round(progress.progress * 100)}
-                            size="small"
-                            color="informative"
-                        />
+                    <div className={styles.progressRingContainer}>
+                        <div className={styles.progressRingBg} />
+                        <svg className={styles.progressRingSvg} viewBox="0 0 40 40">
+                            <circle
+                                className={styles.progressRingTrack}
+                                cx="20"
+                                cy="20"
+                                r={radius}
+                            />
+                            <circle
+                                className={styles.progressRingFill}
+                                cx="20"
+                                cy="20"
+                                r={radius}
+                                strokeDasharray={circumference}
+                                strokeDashoffset={dashOffset}
+                            />
+                        </svg>
+                        <span className={styles.progressRingLabel}>{progressPercent}%</span>
                     </div>
                 )}
                 {progress?.isFinished && (
-                    <div className={styles.progressBadge}>
-                        <Badge appearance="filled" color="success" size="small">
-                            ✓
-                        </Badge>
+                    <div className={styles.finishedBadge}>
+                        <Checkmark20Filled />
                     </div>
                 )}
             </div>

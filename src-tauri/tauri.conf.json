@@ -19,10 +19,7 @@
                 "minWidth": 800,
                 "minHeight": 600,
                 "transparent": true,
-                "decorations": false,
-                "windowEffects": {
-                    "effects": ["mica"]
-                }
+                "decorations": false
             }
         ],
         "security": {

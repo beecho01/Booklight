@@ -16,6 +16,7 @@ import {
     Clock20Regular,
     Dismiss20Regular,
     Document20Regular,
+    Next20Regular,
     Play20Filled,
     Search20Regular,
 } from '@fluentui/react-icons'
@@ -370,13 +371,25 @@ export default function AudiobookDetailModal({
                 <DialogActions>
                     <Button
                         appearance="primary"
-                        icon={<Play20Filled />}
+                        icon={
+                            item.userMediaProgress &&
+                            !item.userMediaProgress.isFinished &&
+                            item.userMediaProgress.progress > 0 ? (
+                                <Next20Regular />
+                            ) : (
+                                <Play20Filled />
+                            )
+                        }
                         onClick={() => {
                             playback.playItem(item)
                             onOpenChange({} as any, { open: false })
                         }}
                     >
-                        Play
+                        {item.userMediaProgress &&
+                        !item.userMediaProgress.isFinished &&
+                        item.userMediaProgress.progress > 0
+                            ? `Continue · ${formatTime(item.userMediaProgress.currentTime)}`
+                            : 'Play'}
                     </Button>
                     <Button
                         appearance="secondary"
