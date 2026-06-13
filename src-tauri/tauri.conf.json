@@ -16,7 +16,7 @@
                 "title": "Booklight",
                 "width": 1200,
                 "height": 800,
-                "minWidth": 800,
+                "minWidth": 968,
                 "minHeight": 600,
                 "transparent": true,
                 "decorations": false
