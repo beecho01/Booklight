@@ -10,7 +10,11 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <h3 align="center">📖 Booklight</h3>
+  <a href="https://github.com/beecho01/Booklight">
+    <img src="public/Logo.png" alt="Booklight" width="80" height="80">
+  </a>
+
+  <h3 align="center">Booklight</h3>
 
   <p align="center">
     A native Windows desktop client for <a href="https://github.com/advplyr/audiobookshelf">Audiobookshelf</a>, built with Tauri v2, React 18, TypeScript, and Fluent UI.
@@ -131,16 +135,18 @@ To get a local copy up and running, follow these steps.
 - [x] Now Playing bar with chapter selector
 - [x] Audiobook detail modal
 - [x] Library filtering (genre, author, narrator)
-- [x] System accent color matching
+- [x] System accent colour matching
 - [x] Persistent volume and playback speed
 - [x] Dark/Light/System theme support
+- [x] Listening progress display with percentage rings
+- [x] Continue playback from last position
+- [x] Search functionality
+- [x] Collections and playlists
 - [ ] Sync listening progress across devices
 - [ ] Podcast support
-- [ ] Collections and playlists
 - [ ] Mini-player (detached floating window)
 - [ ] Sleep timer
 - [ ] Bookmarks management
-- [ ] Search functionality
 
 See the [open issues](https://github.com/beecho01/Booklight/issues) for a full list of proposed features and known issues.
 
