@@ -16,6 +16,8 @@
 
   <h3 align="center">Booklight</h3>
 
+
+
   <p align="center">
     A native Windows desktop client for <a href="https://github.com/advplyr/audiobookshelf">Audiobookshelf</a>, built with Tauri v2, React 18, TypeScript, and Fluent UI.
     <br />
@@ -26,6 +28,11 @@
     ·
     <a href="https://github.com/beecho01/Booklight/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
+
+  <img src="./public/Screenshots/Library_Dark.png" />
+  <br />
+  <br />
+  
 </div>
 
 <!-- TABLE OF CONTENTS -->
