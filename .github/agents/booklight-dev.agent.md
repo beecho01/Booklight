@@ -24,7 +24,7 @@ You are a specialist developer for **Booklight**, a native Windows desktop clien
 ## Approach
 
 1. **Understand the requirement**: Identify which Audiobookshelf API domain the feature belongs to (libraries, items, users, sessions, podcasts, collections, playlists, me, search, etc.) AND what UI screens/components are needed
-2. **Design the UI layout first**: Sketch the component hierarchy and layout using the Design System below. Map every visual element to a Fluent UI component. Define the color tokens and spacing before writing any component code
+2. **Design the UI layout first**: Sketch the component hierarchy and layout using the Design System below. Map every visual element to a Fluent UI component. Define the colour tokens and spacing before writing any component code
 3. **Design the Rust command layer**: Define a Tauri command in `src-tauri/src/lib.rs` (or a new module) that calls the Audiobookshelf API, handles auth, and returns typed data to the frontend. Commands are `async` in Tauri v2 — no need for `tokio::runtime::Runtime` wrappers
 4. **Define TypeScript types**: Create or update types in `src/types/` matching the Audiobookshelf API response shapes
 5. **Build the React UI**: Use Fluent UI components with `makeStyles` and the Booklight design tokens below. Follow the Windows 11 design patterns and component mapping in this file
@@ -45,7 +45,7 @@ Booklight uses the HTML5 Audio API for playback. The flow is:
 
 Booklight follows a polished, native Windows 11 media app aesthetic. Every screen must feel like a first-party Windows application. When designing or implementing UI, follow these specifications exactly.
 
-### Color Palette & Tokens
+### Colour Palette & Tokens
 
 Define these as Fluent UI theme tokens using `webLightTheme` as the base, overridden with Booklight's palette:
 
@@ -70,13 +70,13 @@ const booklightTheme: Theme = {
 }
 ```
 
-**Important**: Booklight uses Windows Mica effect. The main window has `transparent: true` and `windowEffects: { effects: ["mica"] }` in `tauri.conf.json`. All backgrounds through the DOM tree (html → body → FluentProvider → content) must be `transparent` to let Mica show through. Use semi-transparent `rgba()` values for surface hierarchy instead of solid colors. The global styles in `styles.css` enforce `background: transparent !important` on html, body, #container, #root, and `.fui-FluentProvider`.
+**Important**: Booklight uses Windows Mica effect. The main window has `transparent: true` and `windowEffects: { effects: ["mica"] }` in `tauri.conf.json`. All backgrounds through the DOM tree (html → body → FluentProvider → content) must be `transparent` to let Mica show through. Use semi-transparent `rgba()` values for surface hierarchy instead of solid colours. The global styles in `styles.css` enforce `background: transparent !important` on html, body, #container, #root, and `.fui-FluentProvider`.
 
 ### Typography
 
 Use Fluent UI's `Text` component with these presets:
 
-| Role              | Component                             | Size | Weight   | Color token               |
+| Role              | Component                             | Size | Weight   | Colour token              |
 | ----------------- | ------------------------------------- | ---- | -------- | ------------------------- |
 | Page title        | `<Text size={600} weight="semibold">` | 28px | Semibold | `colorNeutralForeground1` |
 | Section heading   | `<Text size={500} weight="semibold">` | 20px | Semibold | `colorNeutralForeground1` |
@@ -590,7 +590,7 @@ const booklightDarkTheme: Theme = {
 
 Switch themes using `<FluentProvider theme={isDark ? booklightDarkTheme : booklightTheme}>`.
 
-### Responsive Behavior
+### Responsive Behaviour
 
 -   **Sidebar**: Collapsible — full (240px) with labels, or icon-only (56px) via toggle button (hamburger menu)
 -   **Book grid**: `auto-fill` with `minmax(160px, 1fr)` adapts to window width; zoom control adjusts card size
@@ -624,7 +624,7 @@ Booklight uses two Tauri windows. The mini-player is a separate window that comm
 -   The main window uses Windows Mica effect with `transparent: true` and `decorations: false`
 -   A custom `TitleBar.tsx` component provides window controls (minimize, maximize, close) using Tauri's window API
 -   The Mica effect requires the entire DOM tree to have transparent backgrounds (enforced in `styles.css`)
--   **Fluent UI popovers, dropdowns, and dialogs need solid backgrounds** — because the main window is transparent for Mica, Fluent UI popup surfaces (Popover, Menu, Dialog, Dropdown) inherit transparency and become see-through. Override their backgrounds with solid colors: light mode `#ffffff`, dark mode `#292929`. Use `makeStyles` targeting `.fui-PopoverSurface`, `.fui-MenuSurface`, `.fui-DialogSurface` etc.
+-   **Fluent UI popovers, dropdowns, and dialogs need solid backgrounds** — because the main window is transparent for Mica, Fluent UI popup surfaces (Popover, Menu, Dialog, Dropdown) inherit transparency and become see-through. Override their backgrounds with solid colours: light mode `#ffffff`, dark mode `#292929`. Use `makeStyles` targeting `.fui-PopoverSurface`, `.fui-MenuSurface`, `.fui-DialogSurface` etc.
 -   **Mini-player window**: Not yet implemented. When added, it will be a separate Tauri window (`label: "miniplayer"`, `width: 380`, `height: 96`, `decorations: false`, `alwaysOnTop: true`, `resizable: false`, `visible: false`) that communicates with the main window via Tauri events
 
 ### Audiobookshelf Data Model for Detail Modal
@@ -824,7 +824,7 @@ The Audiobookshelf server exposes a REST API at `/api/` with these key domains:
 **Rust model considerations:**
 
 -   `BookMetadata` must have `authorName`, `narratorName`, `seriesName` as `Option<String>` with `#[serde(default)]` to handle both minified and expanded responses.
--   The `authors` field uses a custom deserializer (`deserialize_authors`) because the API can return either `[{id, name}]` (expanded) or `[]` (minified — empty array when authors aren't expanded).
+-   The `authors` field uses a custom de-serialiser (`deserialize_authors`) because the API can return either `[{id, name}]` (expanded) or `[]` (minified — empty array when authors aren't expanded).
 -   **All `f64` fields in Rust models must use `deserialize_f64_loose`** — the Audiobookshelf API sometimes returns numeric fields as strings (e.g. `"11682.186469"` instead of `11682.186469`). Use `deserialize_f64_loose` for required `f64` fields and `deserialize_option_f64_loose` for `Option<f64>` fields. Both handle number, string, and null values gracefully.
 -   **`MediaProgress.libraryItemId` must be `Option<String>`** — the API can return `null` for this field (from `this.extraData?.libraryItemId || null` in `getOldMediaProgress()`). Add `#[serde(default)]` to all `MediaProgress` fields.
 -   **Cloudflare tunnels support**: The reqwest client uses `danger_accept_invalid_certs(true)` and `redirect(Policy::limited(10))` via `build_client()` to handle self-hosted endpoints behind Cloudflare tunnels that may use custom SSL certificates and redirect chains.
@@ -901,7 +901,7 @@ When implementing features, follow this order:
 ### For UI-heavy features (screens, layouts, components):
 
 1. **Layout sketch**: Describe the component hierarchy and grid/flex layout using the Design System patterns above
-2. **Design token mapping**: List which Booklight color tokens, spacing tokens, and border radii apply
+2. **Design token mapping**: List which Booklight colour tokens, spacing tokens, and border radii apply
 3. **Fluent UI component mapping**: List every UI element and its Fluent UI component (see tables above)
 4. **`makeStyles` definitions**: Show all style hooks with exact token references from this design system
 5. **React component code**: Full component implementation using Fluent UI components + styles
